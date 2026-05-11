@@ -1,0 +1,29 @@
+services:
+
+  backend:
+
+    build:
+      context: ./backend
+
+    container_name: rag-backend
+
+    ports:
+      - "8000:8000"
+
+    restart: always
+
+
+  frontend:
+
+    build:
+      context: ./frontend
+
+    container_name: rag-frontend
+
+    ports:
+      - "8501:8501"
+
+    depends_on:
+      - backend
+
+    restart: always

@@ -1,16 +1,22 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
-import ollama
+from fastapi import FastAPI, UploadFile, File
+import shutil
+
+from app.models.chat_models import ChatRequest
+from app.services.rag_service import RAGService
+from app.services.ingestion_service import IngestionService
+
 
 app = FastAPI()
 
 
-class ChatRequest(BaseModel):
-    query: str
+rag_service = RAGService()
+
+ingestion_service = IngestionService()
 
 
 @app.get("/")
 def health_check():
+
     return {
         "status": "running"
     }
@@ -19,16 +25,47 @@ def health_check():
 @app.post("/chat")
 def chat(request: ChatRequest):
 
-    response = ollama.chat(
-        model="phi3:mini",
-        messages=[
-            {
-                "role": "user",
-                "content": request.query
-            }
-        ]
+    response = rag_service.ask_question(
+        request.query,
+        request.chat_history
+    )
+
+    return response
+
+
+@app.post("/upload")
+def upload_pdf(file: UploadFile = File(...)):
+
+    file_path = f"backend/data/{file.filename}"
+
+    with open(file_path, "wb") as buffer:
+
+        shutil.copyfileobj(file.file, buffer)
+
+    file_hash = ingestion_service.generate_file_hash(
+        file_path
+    )
+
+    if ingestion_service.document_exists(file_hash):
+
+        return {
+            "message": "Document already uploaded",
+            "file_hash": file_hash
+        }
+
+    chunks_created = ingestion_service.ingest_pdf(
+        file_path
+    )
+
+    ingestion_service.register_document(
+        file.filename,
+        file_hash,
+        chunks_created
     )
 
     return {
-        "response": response["message"]["content"]
+        "message": "PDF uploaded successfully",
+        "filename": file.filename,
+        "file_hash": file_hash,
+        "chunks_created": chunks_created
     }
