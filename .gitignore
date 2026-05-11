@@ -1,4 +1,26 @@
+# Virtual environments
 venv/
+.env
+
+# Python cache
 __pycache__/
 *.pyc
+*.pyo
+
+# Vector database
 backend/vectorstore/
+
+# Uploaded documents
+backend/data/*.pdf
+backend/data/*.docx
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Docker cache
+*.log
