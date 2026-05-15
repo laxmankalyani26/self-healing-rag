@@ -1,11 +1,17 @@
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
-from ollama import Client
-from ollama import Client
+import google.generativeai as genai
+import os
 
-ollama = Client(
-    host="http://host.docker.internal:11434"
+
+genai.configure(
+    api_key=os.getenv("GEMINI_API_KEY")
 )
+
+model = genai.GenerativeModel(
+    "gemini-1.5-flash"
+)
+
 
 class RAGService:
 
@@ -41,20 +47,11 @@ class RAGService:
         Rewritten Query:
         """
 
-        response = ollama.chat(
-            model="phi3:mini",
-            messages=[
-                {
-                    "role": "user",
-                    "content": rewrite_prompt
-                }
-            ],
-            options={
-                "temperature": 0.1
-            }
+        response = model.generate_content(
+            rewrite_prompt
         )
 
-        return response["message"]["content"]
+        return response.text
 
     def ask_question(
         self,
@@ -180,20 +177,11 @@ class RAGService:
         {query}
         """
 
-        response = ollama.chat(
-            model="phi3:mini",
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            options={
-                "temperature": 0.2
-            }
+        response = model.generate_content(
+            prompt
         )
 
         return {
-            "answer": response["message"]["content"],
+            "answer": response.text,
             "sources": sources
         }

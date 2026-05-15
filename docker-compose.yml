@@ -9,7 +9,8 @@ services:
 
     ports:
       - "8000:8000"
-
+    environment:
+      - GEMINI_API_KEY=AIzaSyCp4dxxAuOg3CeCLkkfteKk6bXJQ0sjK9U
     restart: always
 
 
