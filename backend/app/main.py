@@ -36,7 +36,7 @@ def chat(request: ChatRequest):
 @app.post("/upload")
 def upload_pdf(file: UploadFile = File(...)):
 
-    file_path = f"backend/data/{file.filename}"
+    file_path = f"data/{file.filename}"
 
     with open(file_path, "wb") as buffer:
 

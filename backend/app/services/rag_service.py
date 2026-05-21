@@ -1,15 +1,16 @@
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 import google.generativeai as genai
+from dotenv import load_dotenv
 import os
 
-
+load_dotenv()
 genai.configure(
     api_key=os.getenv("GEMINI_API_KEY")
 )
 
 model = genai.GenerativeModel(
-    "gemini-1.5-flash"
+    "gemini-2.0-flash"
 )
 
 
@@ -22,7 +23,7 @@ class RAGService:
         )
 
         self.vector_db = Chroma(
-            persist_directory="backend/vectorstore",
+            persist_directory="vectorstore",
             embedding_function=self.embedding_model
         )
 
@@ -103,51 +104,51 @@ class RAGService:
             [score for _, score in results]
         )
 
+        # if best_score > 1.0:
+
+        #     print("\nWeak retrieval detected")
+        #     print("\nRetrying with rewritten query...\n")
+
+        #     rewritten_query = self.rewrite_query(query)
+
+        #     print(rewritten_query)
+
+        #     retry_query = f"""
+        #     Conversation History:
+        #     {conversation_context}
+
+        #     Rewritten User Question:
+        #     {rewritten_query}
+        #     """
+
+        #     results = self.vector_db.similarity_search_with_score(
+        #         retry_query,
+        #         k=3
+        #     )
+
+        #     context_parts = []
+
+        #     sources = []
+
+        #     for document, score in results:
+
+        #         context_parts.append(
+        #             document.page_content
+        #         )
+
+        #         sources.append({
+        #             "source": document.metadata.get("source"),
+        #             "page": document.metadata.get("page"),
+        #             "score": score
+        #         })
+
+        #     context = "\n\n".join(context_parts)
+
+        #     best_score = min(
+        #         [score for _, score in results]
+        #     )
+
         if best_score > 1.0:
-
-            print("\nWeak retrieval detected")
-            print("\nRetrying with rewritten query...\n")
-
-            rewritten_query = self.rewrite_query(query)
-
-            print(rewritten_query)
-
-            retry_query = f"""
-            Conversation History:
-            {conversation_context}
-
-            Rewritten User Question:
-            {rewritten_query}
-            """
-
-            results = self.vector_db.similarity_search_with_score(
-                retry_query,
-                k=3
-            )
-
-            context_parts = []
-
-            sources = []
-
-            for document, score in results:
-
-                context_parts.append(
-                    document.page_content
-                )
-
-                sources.append({
-                    "source": document.metadata.get("source"),
-                    "page": document.metadata.get("page"),
-                    "score": score
-                })
-
-            context = "\n\n".join(context_parts)
-
-            best_score = min(
-                [score for _, score in results]
-            )
-
-            if best_score > 1.0:
 
                 return {
                     "answer": (
