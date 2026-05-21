@@ -5,7 +5,7 @@ import os
 # Backend URL
 BACKEND_URL = os.getenv(
     "BACKEND_URL",
-    "http://localhost:8000"
+    "http://self-healing-rag-production.up.railway.app"
 )
 
 # Session state
