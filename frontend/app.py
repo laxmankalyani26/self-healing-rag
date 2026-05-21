@@ -1,19 +1,27 @@
 import streamlit as st
 import requests
+import os
 
+# Backend URL
+BACKEND_URL = os.getenv(
+    "BACKEND_URL",
+    "http://localhost:8000"
+)
+
+# Session state
 if "chat_history" not in st.session_state:
-
     st.session_state.chat_history = []
 
+# Title
 st.title("Self-Healing RAG System")
 
-
+# File Upload
 uploaded_file = st.file_uploader(
     "Upload PDF",
     type=["pdf"]
 )
 
-
+# Upload API Call
 if uploaded_file is not None:
 
     files = {
@@ -24,30 +32,40 @@ if uploaded_file is not None:
         )
     }
 
-    response = requests.post(
-        "http://backend:8000/upload",
-        files=files
-    )
+    try:
 
-    if response.status_code == 200:
+        response = requests.post(
+            f"{BACKEND_URL}/upload",
+            files=files
+        )
 
-        st.success(response.json()["message"])
+        if response.status_code == 200:
 
-    else:
+            st.success(
+                response.json()["message"]
+            )
 
-        st.error(response.text)
+        else:
 
+            st.error(response.text)
+
+    except Exception as e:
+
+        st.error(f"Upload Error: {e}")
+
+# Display Chat History
 for message in st.session_state.chat_history:
 
     with st.chat_message(message["role"]):
 
         st.write(message["content"])
 
+# Chat Input
 query = st.chat_input(
     "Ask a question"
 )
 
-
+# Chat API Call
 if query:
 
     st.session_state.chat_history.append({
@@ -59,29 +77,35 @@ if query:
 
         st.write(query)
 
-    response = requests.post(
-        "http://backend:8000/chat",
-        json={
-            "query": query,
-            "chat_history": st.session_state.chat_history
-        }
-    )
+    try:
 
-    data = response.json()
+        response = requests.post(
+            f"{BACKEND_URL}/chat",
+            json={
+                "query": query,
+                "chat_history": st.session_state.chat_history
+            }
+        )
 
-    answer = data["answer"]
+        data = response.json()
 
-    st.session_state.chat_history.append({
-        "role": "assistant",
-        "content": answer
-    })
+        answer = data["answer"]
 
-    with st.chat_message("assistant"):
+        st.session_state.chat_history.append({
+            "role": "assistant",
+            "content": answer
+        })
 
-        st.write(answer)
+        with st.chat_message("assistant"):
 
-        st.subheader("Sources")
+            st.write(answer)
 
-        for source in data["sources"]:
+            st.subheader("Sources")
 
-            st.write(source)
+            for source in data["sources"]:
+
+                st.write(source)
+
+    except Exception as e:
+
+        st.error(f"Chat Error: {e}")
